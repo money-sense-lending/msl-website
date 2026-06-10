@@ -289,3 +289,18 @@ function isPhone(phone_number){
     if (eligible(a)) prefetch(a.href);
   }, { passive: true });
 })();
+
+/* ---- Floating click-to-call button (mobile-first conversion) ---- */
+(function () {
+  function add() {
+    if (document.getElementById('msl-call-fab')) return;
+    var a = document.createElement('a');
+    a.id = 'msl-call-fab';
+    a.href = 'tel:1300442497';
+    a.setAttribute('aria-label', 'Call Money Sense Lending on 1300 442 497');
+    a.innerHTML = '<i class="fa-solid fa-phone"></i><span>Call 1300 442 497</span>';
+    a.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:99999;background:#e25928;color:#fff;padding:13px 20px;border-radius:50px;font-weight:700;text-decoration:none;box-shadow:0 6px 18px rgba(0,0,0,.28);display:inline-flex;align-items:center;gap:9px;font-size:1rem;line-height:1';
+    document.body.appendChild(a);
+  }
+  if (document.body) add(); else document.addEventListener('DOMContentLoaded', add);
+})();
