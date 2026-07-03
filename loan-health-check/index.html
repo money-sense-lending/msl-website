@@ -325,7 +325,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
   // ---- Lead gate: capture details (via Web3Forms) BEFORE unlocking the health check ----
   // Get a free key at https://web3forms.com (enter your email, the key arrives by email).
-  var WEB3FORMS_ACCESS_KEY="208a09c8-8c6a-4edb-9136-bdd58c3c9b37";
+  var WEB3FORMS_ACCESS_KEY="208a09c8-8c6a-4edb-9136-bdd58c3c9b37"; // gitleaks:allow
   $('lhc-unlock').addEventListener('click',function(){
     var name=$('lhc-name').value.trim(), email=$('lhc-email').value.trim(), phone=$('lhc-phone').value.trim();
     if(!name||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)||phone.replace(/\D/g,'').length<8){$('lhc-gate-err').style.display='block';return;}
