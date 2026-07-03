@@ -270,14 +270,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           <input id="bcalc-email" type="email" class="bcalc-input" placeholder="you@email.com">
         </div>
         <div class="bcalc-col bcalc-col-2">
-          <label class="bcalc-label">Phone <span style="font-weight:400;color:#6c757d">(optional)</span></label>
+          <label class="bcalc-label">Phone</label>
           <input id="bcalc-phone" class="bcalc-input" placeholder="04XX XXX XXX">
         </div>
         <div class="bcalc-col bcalc-col-2" style="display:flex;align-items:flex-end;">
           <button id="bcalc-unlock" class="bcalc-btn"><i class="fa-solid fa-lock-open mr-2"></i>Unlock my borrowing estimate</button>
         </div>
       </div>
-      <p id="bcalc-gate-err" style="display:none;color:#c8420f;font-weight:600;font-size:.85rem;margin:4px 0 0;">Please enter your name and a valid email to continue.</p>
+      <p id="bcalc-gate-err" style="display:none;color:#c8420f;font-weight:600;font-size:.85rem;margin:4px 0 0;">Please enter your name, a valid email and a phone number to continue.</p>
     </div>
 
     <!-- Calculator: hidden until details are entered -->
@@ -421,7 +421,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   $('bcalc-unlock').addEventListener('click',function(){
     var name=$('bcalc-name').value.trim();
     var email=$('bcalc-email').value.trim();
-    if(!name||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){
+    var phone=$('bcalc-phone').value.trim();
+    if(!name||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)||phone.replace(/\D/g,'').length<8){
       $('bcalc-gate-err').style.display='block';return;
     }
     $('bcalc-gate-err').style.display='none';

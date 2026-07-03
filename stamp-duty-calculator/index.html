@@ -259,10 +259,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       <div class="bcalc-row">
         <div class="bcalc-col bcalc-col-2"><label class="bcalc-label">First name</label><input id="sd-name" class="bcalc-input" placeholder="Your first name"></div>
         <div class="bcalc-col bcalc-col-2"><label class="bcalc-label">Email address</label><input id="sd-email" type="email" class="bcalc-input" placeholder="you@email.com"></div>
-        <div class="bcalc-col bcalc-col-2"><label class="bcalc-label">Phone <span style="font-weight:400;color:#6c757d">(optional)</span></label><input id="sd-phone" class="bcalc-input" placeholder="04XX XXX XXX"></div>
+        <div class="bcalc-col bcalc-col-2"><label class="bcalc-label">Phone</label><input id="sd-phone" class="bcalc-input" placeholder="04XX XXX XXX"></div>
         <div class="bcalc-col bcalc-col-2" style="display:flex;align-items:flex-end;"><button id="sd-unlock" class="bcalc-btn"><i class="fa-solid fa-lock-open mr-2"></i>Unlock my stamp duty estimate</button></div>
       </div>
-      <p id="sd-gate-err" style="display:none;color:#c8420f;font-weight:600;font-size:.85rem;margin:4px 0 0;">Please enter your name and a valid email to continue.</p>
+      <p id="sd-gate-err" style="display:none;color:#c8420f;font-weight:600;font-size:.85rem;margin:4px 0 0;">Please enter your name, a valid email and a phone number to continue.</p>
     </div>
     <div id="sd-calc" style="display:none;">
       <div class="bcalc-row">
@@ -293,7 +293,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   var u=g('sd-unlock');
   if(u) u.addEventListener('click',function(){
     var name=(g('sd-name').value||'').trim(),email=(g('sd-email').value||'').trim(),phone=(g('sd-phone').value||'').trim();
-    if(!name||!isEmail(email)){g('sd-gate-err').style.display='block';return;}
+    if(!name||!isEmail(email)||phone.replace(/\D/g,'').length<8){g('sd-gate-err').style.display='block';return;}
     g('sd-gate-err').style.display='none';
     try{ if(window.fetch) fetch('https://api.web3forms.com/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({access_key:WEB3FORMS_ACCESS_KEY,subject:'New stamp duty calculator lead',from_name:'mslending.au stamp duty calculator',name:name,email:email,phone:phone})}); }catch(e){}
     g('sd-gate').style.display='none'; g('sd-calc').style.display='block';

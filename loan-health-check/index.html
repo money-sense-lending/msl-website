@@ -269,14 +269,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           <input id="lhc-email" type="email" class="bcalc-input" placeholder="you@email.com">
         </div>
         <div class="bcalc-col bcalc-col-2">
-          <label class="bcalc-label">Phone <span style="font-weight:400;color:#6c757d">(optional)</span></label>
+          <label class="bcalc-label">Phone</label>
           <input id="lhc-phone" class="bcalc-input" placeholder="04XX XXX XXX">
         </div>
         <div class="bcalc-col bcalc-col-2" style="display:flex;align-items:flex-end;">
           <button id="lhc-unlock" class="bcalc-btn"><i class="fa-solid fa-lock-open mr-2"></i>Unlock my loan health check</button>
         </div>
       </div>
-      <p id="lhc-gate-err" style="display:none;color:#c8420f;font-weight:600;font-size:.85rem;margin:4px 0 0;">Please enter your name and a valid email to continue.</p>
+      <p id="lhc-gate-err" style="display:none;color:#c8420f;font-weight:600;font-size:.85rem;margin:4px 0 0;">Please enter your name, a valid email and a phone number to continue.</p>
     </div>
 
     <!-- Health check: hidden until details are entered -->
@@ -327,8 +327,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   // Get a free key at https://web3forms.com (enter your email, the key arrives by email).
   var WEB3FORMS_ACCESS_KEY="208a09c8-8c6a-4edb-9136-bdd58c3c9b37";
   $('lhc-unlock').addEventListener('click',function(){
-    var name=$('lhc-name').value.trim(), email=$('lhc-email').value.trim();
-    if(!name||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){$('lhc-gate-err').style.display='block';return;}
+    var name=$('lhc-name').value.trim(), email=$('lhc-email').value.trim(), phone=$('lhc-phone').value.trim();
+    if(!name||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)||phone.replace(/\D/g,'').length<8){$('lhc-gate-err').style.display='block';return;}
     $('lhc-gate-err').style.display='none';
     var btn=this; btn.innerHTML='<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Unlocking...'; btn.disabled=true;
     try{
