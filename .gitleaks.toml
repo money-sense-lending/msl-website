@@ -1,0 +1,13 @@
+# gitleaks configuration for msl-website
+# Extends the default ruleset, but allowlists our PUBLIC Web3Forms access key.
+# Web3Forms access keys are designed to live in client-side code (see web3forms.com docs),
+# so this is a false positive — not a real secret. This suppresses it across all commits.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Public Web3Forms client-side access key (safe to expose, not a secret)"
+regexes = [
+  '''208a09c8-8c6a-4edb-9136-bdd58c3c9b37''',
+]
