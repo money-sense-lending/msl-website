@@ -202,7 +202,7 @@ $("#Call_Email_Address").attr("disabled", true)
 $(me).html("<i class='fa-solid fa-circle-notch fa-spin mr-2'></i> Requesting Call")
 
 // Web3Forms — free form-to-email. Get your key at https://web3forms.com (enter your email, key arrives by email).
-var WEB3FORMS_ACCESS_KEY = "208a09c8-8c6a-4edb-9136-bdd58c3c9b37";
+var WEB3FORMS_ACCESS_KEY = "208a09c8-8c6a-4edb-9136-bdd58c3c9b37"; // gitleaks:allow
 $.ajax({
 type: "POST",
 url: "https://api.web3forms.com/submit",
