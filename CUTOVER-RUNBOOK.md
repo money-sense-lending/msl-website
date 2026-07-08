@@ -23,16 +23,16 @@ Goal: point mslending.au at the new Cloudflare Pages site (msl-website.pages.dev
 
 **Current DNS host:** ns1/2/3.nameserver.net.au (Synergy Wholesale — via Broker Studio).
 
-## The plan (Path B — move DNS to Cloudflare; recommended)
+## The plan (Path B — move DNS to Cloudflare) — UPDATED 2026-07-08 after BizIT reply
 
-Why: Cloudflare Pages needs the apex domain on Cloudflare DNS (CNAME flattening). Also gives us permanent, direct control — no more asking Broker Studio for DNS changes, ever.
+CONFIRMED: BizIT manages the domain in their Synergy Wholesale partner console. They cannot delegate access but WILL action emailed change requests. Domain expires 11 Apr 2027, auto-renew ON. So the cutover = one emailed nameserver-change request to BizIT.
 
-1. **[Dougal → Broker Studio]** Send the access email (below). We need EITHER registrar/DNS access OR them to action a nameserver change on request.
-2. **[Dougal, 5 min, guided]** Add `mslending.au` as a free site in the Cloudflare account (dash.cloudflare.com → Add a domain). Cloudflare auto-imports records — we VERIFY against the snapshot above and fix any gaps (esp. the 5 email records).
-3. **[Claude]** In the Cloudflare zone: add website records pointing at Pages (`@` and `www` → msl-website.pages.dev custom domain), attach the custom domain to the Pages project.
-4. **[Broker Studio or Dougal at registrar]** Change nameservers to the two Cloudflare-assigned ones. This is THE cutover moment.
-5. **[Claude]** Verify: site loads on mslending.au, SSL active, then immediately test email (send in + out), verify MX/SPF/DKIM/DMARC resolve identically.
-6. **Watch 3–4 weeks** (bot tracks rankings) → then cancel Broker Studio website sub. Keep the domain registration paid wherever it lives.
+1. **[Dougal, ~5 min, guided]** dash.cloudflare.com → Add a domain → mslending.au → Free plan. Cloudflare auto-imports DNS records and assigns TWO nameservers (note them down).
+2. **[Claude]** Verify the imported records against the snapshot above via API (esp. the 5 email records); supply exact values for any gaps for Dougal to add in the dash.
+3. **[Dougal, 2 clicks / Claude via API]** Attach mslending.au + www as custom domains on the msl-website Pages project (Workers & Pages → msl-website → Custom domains). Cloudflare auto-creates the website DNS records.
+4. **[Dougal → BizIT]** Email BizIT requesting the nameserver change to the two Cloudflare nameservers (Claude drafts it). THIS IS THE CUTOVER MOMENT.
+5. **[Claude]** Monitor propagation; verify site + SSL on mslending.au; verify MX/SPF/DKIM/DMARC identical; send/receive test email.
+6. Watch 3–4 weeks (bot tracks rankings) → cancel Broker Studio website sub. Domain/renewals stay with BizIT (fine).
 
 ## Rollback (if ever needed)
 Change nameservers back to ns1/2/3.nameserver.net.au → old site + old DNS restored within minutes-to-hours. Nothing is deleted at any step.
