@@ -402,6 +402,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       amt.textContent='Let’s talk';
       rep.textContent='On these figures your income is fully committed — but there are often options. Book a free chat below.';
         lastResult={maxLoan:0,surplus:Math.round(surplus)};
+      sendBorrowLead('Income fully committed — needs a chat');
       return;
     }
     res.classList.remove('warn');
@@ -411,6 +412,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     amt.textContent=money(maxLoan);
     rep.innerHTML='Estimated repayments of about <strong>'+money(actualRepay)+'/month</strong> at '+(rate*100).toFixed(2)+'% over '+term+' years.';
     lastResult={maxLoan:maxLoan,repay:Math.round(actualRepay),rate:(rate*100).toFixed(2),term:term,couple:couple,deps:deps,income1:inc1,income2:inc2};
+    sendBorrowLead(money(maxLoan)+' (~'+money(actualRepay)+'/mo at '+(rate*100).toFixed(2)+'%)');
     res.scrollIntoView({behavior:'smooth',block:'center'});
   }
   $('bcalc-go').addEventListener('click',calculate);
@@ -418,6 +420,41 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   // ---- Lead gate: capture details (via Web3Forms) BEFORE unlocking the calculator ----
   // Get a free key at https://web3forms.com (enter your email, the key arrives by email).
   var WEB3FORMS_ACCESS_KEY="208a09c8-8c6a-4edb-9136-bdd58c3c9b37"; // gitleaks:allow
+  var leadPending=false, fullSent=false;
+  function postLead(payload,beacon){
+    payload.access_key=WEB3FORMS_ACCESS_KEY;
+    payload.from_name='Money Sense Lending website';
+    var body=JSON.stringify(payload);
+    try{
+      if(beacon && navigator.sendBeacon){
+        navigator.sendBeacon('https://api.web3forms.com/submit', new Blob([body],{type:'application/json'}));
+      }else{
+        fetch('https://api.web3forms.com/submit',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:body});
+      }
+    }catch(e){}
+  }
+  // Full lead (with income/expenses/debts + result) — emailed once, when they hit Calculate.
+  function sendBorrowLead(resultText){
+    if(fullSent) return; fullSent=true; leadPending=false;
+    var couple=$('bcalc-applicants').value==='couple';
+    postLead({
+      subject:'Borrowing Capacity lead — '+$('bcalc-name').value.trim()+' — '+resultText,
+      name:$('bcalc-name').value.trim(),
+      email:$('bcalc-email').value.trim(),
+      phone:$('bcalc-phone').value.trim(),
+      applicants:(couple?'Couple':'Single'),
+      dependents:(parseInt($('bcalc-deps').value)||0),
+      income_applicant_1:money(num('bcalc-income1')),
+      income_applicant_2:(couple?money(num('bcalc-income2')):'—'),
+      monthly_living_expenses:($('bcalc-expenses').value.trim()?money(num('bcalc-expenses')):'auto (HEM used)'),
+      other_loan_repayments_monthly:money(num('bcalc-debts')),
+      credit_card_limits:money(num('bcalc-cards')),
+      interest_rate_used:(num('bcalc-rate')||6.2).toFixed(2)+'%',
+      loan_term:(parseInt($('bcalc-term').value)||30)+' years',
+      estimated_borrowing:resultText,
+      source:'Borrowing Capacity Calculator'
+    });
+  }
   $('bcalc-unlock').addEventListener('click',function(){
     var name=$('bcalc-name').value.trim();
     var email=$('bcalc-email').value.trim();
@@ -427,24 +464,26 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     }
     $('bcalc-gate-err').style.display='none';
     var btn=this; btn.innerHTML='<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Unlocking...'; btn.disabled=true;
-    // fire the lead off to Dougal's inbox (don't block the UX on the network)
-    try{
-      fetch('https://api.web3forms.com/submit',{
-        method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},
-        body:JSON.stringify({
-          access_key:WEB3FORMS_ACCESS_KEY,
-          subject:'Borrowing Capacity lead — '+name,
-          from_name:'Money Sense Lending website',
-          name:name,email:email,phone:$('bcalc-phone').value.trim(),
-          source:'Borrowing Capacity Calculator'
-        })
-      });
-    }catch(e){}
-    // unlock the calculator
+    // Identity captured here; full lead (with their numbers) fires when they hit Calculate below.
+    leadPending=true;
     $('bcalc-gate').style.display='none';
     $('bcalc-calc').style.display='block';
     $('bcalc-calc').scrollIntoView({behavior:'smooth',block:'start'});
   });
+  // Fallback: unlocked but left before calculating — still email the basic lead (once).
+  function flushPending(){
+    if(leadPending && !fullSent){
+      leadPending=false;
+      postLead({
+        subject:'Borrowing Capacity lead (no result) — '+$('bcalc-name').value.trim(),
+        name:$('bcalc-name').value.trim(), email:$('bcalc-email').value.trim(), phone:$('bcalc-phone').value.trim(),
+        note:'Unlocked the calculator but left before calculating.',
+        source:'Borrowing Capacity Calculator'
+      }, true);
+    }
+  }
+  document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='hidden') flushPending(); });
+  window.addEventListener('pagehide', flushPending);
 })();
 </script>
 
