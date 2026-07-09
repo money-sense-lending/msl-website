@@ -304,3 +304,54 @@ function isPhone(phone_number){
   }
   if (document.body) add(); else document.addEventListener('DOMContentLoaded', add);
 })();
+
+// ---- Live Google review count (Featurable — synced to the GBP profile) ----
+// Fetches the real review count from Featurable's API (12h localStorage cache)
+// and freshens every visible badge, the <title>, and JSON-LD aggregateRating.
+// Counts only ever go UP from the static values baked into the HTML.
+(function(){
+  var API='https://featurable.com/api/v2/widgets/0b7a6c84-2cf4-45b7-99f8-1b5cd5c94f73';
+  var KEY='msl_rev_v1';
+  function apply(count){
+    if(!count||count<100) return; // sanity floor — never trust a tiny/garbage value
+    var up=function(num){return Math.max(parseInt(num,10),count);};
+    var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,null);
+    var n;
+    while((n=w.nextNode())){
+      var t=n.nodeValue;
+      if(!/\d{2,4}\s*(?:★|(?:Google\s+)?[Rr]eviews)/.test(t)&&!/from\s+\d{2,4}/i.test(t)) continue;
+      var nt=t
+        .replace(/(\bfrom\s+)(\d{2,4})(\s+(?:Google\s+)?[Rr]eviews)/g,function(m,a,num,b){return a+up(num)+b;})
+        .replace(/(\d{2,4})(\s*★)/g,function(m,num,b){return up(num)+b;});
+      if(nt!==t) n.nodeValue=nt;
+    }
+    document.title=document.title.replace(/(\d{2,4})(\s*★)/,function(m,num,b){return up(num)+b;});
+    var scripts=document.querySelectorAll('script[type="application/ld+json"]');
+    for(var i=0;i<scripts.length;i++){
+      try{
+        var j=JSON.parse(scripts[i].textContent), touched=false;
+        (function walk(o){
+          if(o&&typeof o==='object'){
+            if(o['@type']==='AggregateRating'){
+              if(o.reviewCount&&parseInt(o.reviewCount,10)<count){o.reviewCount=String(count);touched=true;}
+              if(o.ratingCount&&parseInt(o.ratingCount,10)<count){o.ratingCount=String(count);touched=true;}
+            }
+            for(var k in o) walk(o[k]);
+          }
+        })(j);
+        if(touched) scripts[i].textContent=JSON.stringify(j);
+      }catch(e){}
+    }
+  }
+  function run(count){ if(document.body){apply(count);} else {document.addEventListener('DOMContentLoaded',function(){apply(count);});} }
+  try{
+    var c=JSON.parse(localStorage.getItem(KEY)||'null');
+    if(c&&c.t>Date.now()-43200000){ run(c.n); return; }
+  }catch(e){}
+  fetch(API).then(function(r){return r.json();}).then(function(j){
+    var s=j&&j.widget&&j.widget.gbpLocationSummary;
+    if(!s||!s.reviewsCount) return;
+    try{localStorage.setItem(KEY,JSON.stringify({n:s.reviewsCount,t:Date.now()}));}catch(e){}
+    run(s.reviewsCount);
+  }).catch(function(){});
+})();
