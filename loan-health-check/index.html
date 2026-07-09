@@ -326,27 +326,44 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   // ---- Lead gate: capture details (via Web3Forms) BEFORE unlocking the health check ----
   // Get a free key at https://web3forms.com (enter your email, the key arrives by email).
   var WEB3FORMS_ACCESS_KEY="208a09c8-8c6a-4edb-9136-bdd58c3c9b37"; // gitleaks:allow
+  var leadPending=false, fullSent=false;
+  function postLead(payload,beacon){
+    payload.access_key=WEB3FORMS_ACCESS_KEY;
+    payload.from_name='Money Sense Lending website';
+    var body=JSON.stringify(payload);
+    try{
+      if(beacon && navigator.sendBeacon){
+        navigator.sendBeacon('https://api.web3forms.com/submit', new Blob([body],{type:'application/json'}));
+      }else{
+        fetch('https://api.web3forms.com/submit',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:body});
+      }
+    }catch(e){}
+  }
   $('lhc-unlock').addEventListener('click',function(){
     var name=$('lhc-name').value.trim(), email=$('lhc-email').value.trim(), phone=$('lhc-phone').value.trim();
     if(!name||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)||phone.replace(/\D/g,'').length<8){$('lhc-gate-err').style.display='block';return;}
     $('lhc-gate-err').style.display='none';
     var btn=this; btn.innerHTML='<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Unlocking...'; btn.disabled=true;
-    try{
-      fetch('https://api.web3forms.com/submit',{
-        method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},
-        body:JSON.stringify({
-          access_key:WEB3FORMS_ACCESS_KEY,
-          subject:'Loan Health Check lead — '+name,
-          from_name:'Money Sense Lending website',
-          name:name,email:email,phone:$('lhc-phone').value.trim(),
-          source:'Loan Health Check Calculator'
-        })
-      });
-    }catch(e){}
+    // Identity captured here; the full lead (with loan balance + rate) is emailed once they run the check below.
+    leadPending=true;
     $('lhc-gate').style.display='none';
     $('lhc-calc').style.display='block';
     $('lhc-calc').scrollIntoView({behavior:'smooth',block:'start'});
   });
+  // Fallback: if they unlock but leave before running the check, still email the basic lead (once).
+  function flushPending(){
+    if(leadPending && !fullSent){
+      leadPending=false;
+      postLead({
+        subject:'Loan Health Check lead (no result) — '+$('lhc-name').value.trim(),
+        name:$('lhc-name').value.trim(), email:$('lhc-email').value.trim(), phone:$('lhc-phone').value.trim(),
+        note:'Unlocked the calculator but left before entering loan details.',
+        source:'Loan Health Check Calculator'
+      }, true);
+    }
+  }
+  document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='hidden') flushPending(); });
+  window.addEventListener('pagehide', flushPending);
 
   function check(){
     var bal=num('lhc-balance'), cur=(num('lhc-rate')||0)/100, term=parseFloat($('lhc-term').value)||25, comp=(num('lhc-comp')||0)/100;
@@ -355,6 +372,23 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     if(bal<=0||cur<=0){res.classList.add('warn');head.textContent='Enter your loan details';sub.textContent='Pop in your current balance and interest rate to see your result.';return;}
     var curM=pmt(bal,cur,term), compM=pmt(bal,comp,term);
     var save=curM-compM, totalSave=save*term*12;
+    // Email the full lead once — includes existing loan + rate alongside name/email/phone.
+    if(!fullSent){
+      fullSent=true; leadPending=false;
+      postLead({
+        subject:'Loan Health Check lead — '+$('lhc-name').value.trim()+' — '+money(bal)+' @ '+(cur*100).toFixed(2)+'%',
+        name:$('lhc-name').value.trim(),
+        email:$('lhc-email').value.trim(),
+        phone:$('lhc-phone').value.trim(),
+        existing_loan_balance:money(bal),
+        current_interest_rate:(cur*100).toFixed(2)+'%',
+        loan_term_remaining:term+' years',
+        rate_compared_against:(comp*100).toFixed(2)+'%',
+        estimated_monthly_saving:(save>0?money(save):'$0 (already on a sharp rate)'),
+        estimated_total_saving:(save>0?money(totalSave)+' over '+term+' years':'$0'),
+        source:'Loan Health Check Calculator'
+      });
+    }
     if(save<=0){
       res.classList.add('warn');
       head.textContent="You're on a sharp rate 👍";
