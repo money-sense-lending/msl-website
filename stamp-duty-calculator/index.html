@@ -290,12 +290,26 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     if(v<=2000000) return v*0.055;
     return 110000+(v-2000000)*0.065;
   }
+  var leadPending=false, fullSent=false;
+  function postLead(payload,beacon){
+    payload.access_key=WEB3FORMS_ACCESS_KEY;
+    payload.from_name='Money Sense Lending website';
+    var body=JSON.stringify(payload);
+    try{
+      if(beacon && navigator.sendBeacon){
+        navigator.sendBeacon('https://api.web3forms.com/submit', new Blob([body],{type:'application/json'}));
+      }else if(window.fetch){
+        fetch('https://api.web3forms.com/submit',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:body});
+      }
+    }catch(e){}
+  }
   var u=g('sd-unlock');
   if(u) u.addEventListener('click',function(){
     var name=(g('sd-name').value||'').trim(),email=(g('sd-email').value||'').trim(),phone=(g('sd-phone').value||'').trim();
     if(!name||!isEmail(email)||phone.replace(/\D/g,'').length<8){g('sd-gate-err').style.display='block';return;}
     g('sd-gate-err').style.display='none';
-    try{ if(window.fetch) fetch('https://api.web3forms.com/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({access_key:WEB3FORMS_ACCESS_KEY,subject:'New stamp duty calculator lead',from_name:'mslending.au stamp duty calculator',name:name,email:email,phone:phone})}); }catch(e){}
+    // Identity captured; full lead (with property price + duty) fires when they calculate below.
+    leadPending=true;
     g('sd-gate').style.display='none'; g('sd-calc').style.display='block';
   });
   var go=g('sd-go');
@@ -303,7 +317,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     var v=parseFloat((g('sd-price').value||'').replace(/[^0-9.]/g,''));
     if(!v||v<=0){g('sd-amount').textContent='Enter a price';g('sd-note').textContent='';g('sd-result').style.display='block';return;}
     var gen=generalDuty(v),duty=gen,note='';
-    if(g('sd-type').value==='fhb'){
+    var isFhb=g('sd-type').value==='fhb';
+    if(isFhb){
       if(v<=600000){duty=0;note='First home buyer exemption applied &mdash; you save '+fmt(gen)+'.';}
       else if(v<=750000){duty=gen*(v-600000)/150000;note='First home buyer concession applied &mdash; you save '+fmt(gen-duty)+'.';}
       else{note='Above the $750,000 first home buyer threshold &mdash; standard duty applies.';}
@@ -311,7 +326,35 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     g('sd-amount').textContent=fmt(duty);
     g('sd-note').innerHTML=note;
     g('sd-result').style.display='block';
+    // Email the full lead once — includes property price + buyer type + duty payable.
+    if(!fullSent){
+      fullSent=true; leadPending=false;
+      postLead({
+        subject:'Stamp Duty lead — '+(g('sd-name').value||'').trim()+' — '+fmt(v)+' → duty '+fmt(duty),
+        name:(g('sd-name').value||'').trim(),
+        email:(g('sd-email').value||'').trim(),
+        phone:(g('sd-phone').value||'').trim(),
+        purchase_price:fmt(v),
+        buyer_type:(isFhb?'First home buyer':'Standard (not first home buyer)'),
+        estimated_stamp_duty:fmt(duty),
+        source:'Stamp Duty Calculator'
+      });
+    }
   });
+  // Fallback: unlocked but left before calculating — still email the basic lead (once).
+  function flushPending(){
+    if(leadPending && !fullSent){
+      leadPending=false;
+      postLead({
+        subject:'Stamp Duty lead (no result) — '+(g('sd-name').value||'').trim(),
+        name:(g('sd-name').value||'').trim(), email:(g('sd-email').value||'').trim(), phone:(g('sd-phone').value||'').trim(),
+        note:'Unlocked the calculator but left before calculating.',
+        source:'Stamp Duty Calculator'
+      }, true);
+    }
+  }
+  document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='hidden') flushPending(); });
+  window.addEventListener('pagehide', flushPending);
 })();
 </script>
 
