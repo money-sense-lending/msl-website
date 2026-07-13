@@ -253,7 +253,7 @@ color:#000;
         <div class="bcalc-col bcalc-col-2"><label class="bcalc-label">Buyer type</label><select id="sd-type" class="bcalc-select"><option value="fhb">First home buyer (living in it)</option><option value="other">Other / investor</option></select></div>
       </div>
       <button id="sd-go" class="bcalc-btn">Calculate my stamp duty</button>
-      <div id="sd-result" class="bcalc-result"><div class="repay">Estimated Victorian stamp duty</div><div class="amount" id="sd-amount">$0</div><div class="repay" id="sd-note"></div></div>
+      <div id="sd-result" class="bcalc-result"><div class="repay">Estimated Victorian stamp duty</div><div class="amount" id="sd-amount">$0</div><div class="repay" id="sd-note"></div><button id="sd-callback" type="button" class="btn mt-3" style="background:transparent;border:2px solid #fff;color:#fff;font-weight:700;display:block;width:100%;border-radius:7px;padding:10px;cursor:pointer;"><i class="fa-solid fa-phone mr-2"></i>Prefer a call? Request a call back</button><div id="sd-cbdone" style="display:none;margin-top:12px;font-weight:700;"></div></div>
       <p class="bcalc-disclaimer">Indicative estimate only, based on current Victorian general land transfer duty rates plus the first home buyer exemption (full exemption to $600,000) and concession ($600,001&ndash;$750,000), assuming the home will be your principal place of residence and you meet eligibility. It excludes the foreign purchaser surcharge, pensioner/off-the-plan concessions, and other costs (transfer and mortgage registration fees). Final duty is assessed by the State Revenue Office. General information only, not financial or legal advice &mdash; talk to us for an exact figure.</p>
       <div style="text-align:center;margin-top:14px;"><a class="btn cta-btn" href="/book-appointment/">Get your exact numbers &mdash; book a free chat</a></div>
     </div>
@@ -338,6 +338,24 @@ color:#000;
   }
   document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='hidden') flushPending(); });
   window.addEventListener('pagehide', flushPending);
+
+  // ---- Request a call back (fires a flagged high-priority lead) ----
+  var cb=g('sd-callback');
+  if(cb) cb.addEventListener('click',function(){
+    var name=(g('sd-name').value||'').trim(), phone=(g('sd-phone').value||'').trim(), email=(g('sd-email').value||'').trim();
+    postLead({
+      subject:'📞 CALLBACK REQUESTED — '+name+' — duty '+(g('sd-amount').textContent||''),
+      name:name, email:email, phone:phone,
+      action_requested:'CALL BACK — this person used the Stamp Duty calculator and wants Dougal to phone them.',
+      purchase_price:(g('sd-price').value||'—'),
+      buyer_type:(g('sd-type').value==='fhb'?'First home buyer':'Standard (not first home buyer)'),
+      estimated_stamp_duty:(g('sd-amount').textContent||'—'),
+      source:'Stamp Duty — Callback Request'
+    });
+    this.style.display='none';
+    var d=g('sd-cbdone'); d.style.display='block';
+    d.innerHTML='<i class="fa-regular fa-circle-check mr-2"></i>Thanks '+name+' — Dougal will call you on '+phone+' to talk it through. Talk soon!';
+  });
 })();
 </script>
 
