@@ -328,6 +328,8 @@ color:#000;
       <div class="amount" id="bcalc-amount">$0</div>
       <div class="repay" id="bcalc-repay"></div>
       <a href="/book-appointment/" class="btn cta-btn mt-3" style="background:#fff;color:#e25928;font-weight:700;">Book a free chat with Dougal</a>
+      <button id="bcalc-callback" type="button" class="btn mt-2" style="background:transparent;border:2px solid #fff;color:#fff;font-weight:700;display:block;width:100%;border-radius:7px;padding:10px;cursor:pointer;"><i class="fa-solid fa-phone mr-2"></i>Prefer a call? Request a call back</button>
+      <div id="bcalc-cbdone" style="display:none;margin-top:12px;font-weight:700;"></div>
     </div>
     </div><!-- /#bcalc-calc -->
 
@@ -400,6 +402,22 @@ color:#000;
     res.scrollIntoView({behavior:'smooth',block:'center'});
   }
   $('bcalc-go').addEventListener('click',calculate);
+
+  // ---- Request a call back (fires a flagged high-priority lead) ----
+  $('bcalc-callback').addEventListener('click',function(){
+    var name=$('bcalc-name').value.trim(), phone=$('bcalc-phone').value.trim(), email=$('bcalc-email').value.trim();
+    var r=lastResult||{};
+    postLead({
+      subject:'📞 CALLBACK REQUESTED — '+name+(r.maxLoan?(' — '+money(r.maxLoan)):''),
+      name:name, email:email, phone:phone,
+      action_requested:'CALL BACK — this person used the Borrowing Power calculator and wants Dougal to phone them.',
+      estimated_borrowing:(r.maxLoan?money(r.maxLoan)+(r.rate?(' (~'+r.rate+'% over '+r.term+'yrs)'):''):'income fully committed — needs a chat'),
+      source:'Borrowing Capacity — Callback Request'
+    });
+    this.style.display='none';
+    var d=$('bcalc-cbdone'); d.style.display='block';
+    d.innerHTML='<i class="fa-regular fa-circle-check mr-2"></i>Thanks '+name+' — Dougal will call you on '+phone+' to talk it through. Talk soon!';
+  });
 
   // ---- Lead gate: capture details (via Web3Forms) BEFORE unlocking the calculator ----
   // Get a free key at https://web3forms.com (enter your email, the key arrives by email).

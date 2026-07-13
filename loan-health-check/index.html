@@ -292,6 +292,8 @@ color:#000;
         <div class="amount" id="lhc-headline">$0</div>
         <div class="repay" id="lhc-sub"></div>
         <a href="/book-appointment/" class="btn cta-btn mt-3" style="background:#fff;color:#e25928;font-weight:700;">Book a free chat with Dougal</a>
+        <button id="lhc-callback" type="button" class="btn mt-2" style="background:transparent;border:2px solid #fff;color:#fff;font-weight:700;display:block;width:100%;border-radius:7px;padding:10px;cursor:pointer;"><i class="fa-solid fa-phone mr-2"></i>Prefer a call? Request a call back</button>
+        <div id="lhc-cbdone" style="display:none;margin-top:12px;font-weight:700;"></div>
       </div>
     </div>
 
@@ -384,6 +386,23 @@ color:#000;
     res.scrollIntoView({behavior:'smooth',block:'center'});
   }
   $('lhc-go').addEventListener('click',check);
+
+  // ---- Request a call back (fires a flagged high-priority lead) ----
+  $('lhc-callback').addEventListener('click',function(){
+    var name=$('lhc-name').value.trim(), phone=$('lhc-phone').value.trim(), email=$('lhc-email').value.trim();
+    var bal=num('lhc-balance'), rate=num('lhc-rate');
+    postLead({
+      subject:'📞 CALLBACK REQUESTED — '+name+(bal>0?(' — '+money(bal)+' @ '+rate.toFixed(2)+'%'):''),
+      name:name, email:email, phone:phone,
+      action_requested:'CALL BACK — this person used the Loan Health Check and wants Dougal to phone them.',
+      existing_loan_balance:(bal>0?money(bal):'—'),
+      current_interest_rate:(rate>0?rate.toFixed(2)+'%':'—'),
+      source:'Loan Health Check — Callback Request'
+    });
+    this.style.display='none';
+    var d=$('lhc-cbdone'); d.style.display='block';
+    d.innerHTML='<i class="fa-regular fa-circle-check mr-2"></i>Thanks '+name+' — Dougal will call you on '+phone+' to talk it through. Talk soon!';
+  });
 })();
 </script>
 
