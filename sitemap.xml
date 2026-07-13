@@ -21,6 +21,9 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://mslending.au/how-much-can-i-borrow/</loc>
+  </url>
+  <url>
     <loc>https://mslending.au/borrowing-capacity/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
